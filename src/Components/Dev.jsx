@@ -7,8 +7,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-
-
+import "../App.css";
 
 function Row({ member, onDelete }) {
   const { setNodeRef, listeners, attributes, transform, transition } =
@@ -17,109 +16,98 @@ function Row({ member, onDelete }) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    border: "1px solid gray",
-    padding: "10px",
-    marginTop: "10px",
-    background: "#eee",
-    cursor: "grab",
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
-      <h3>{member.name}</h3>
-      <p>Skill: {member.skill}</p>
-      <button onClick={() => onDelete(member.id)}>Remove</button>
+    <div ref={setNodeRef} style={style} className="card">
+      <div className="card-left">
+        <span className="drag" {...listeners} {...attributes}>
+          ☰
+        </span>
+
+        <div>
+          <h3>{member.name}</h3>
+          <p>{member.skill}</p>
+        </div>
+      </div>
+
+      <button onClick={() => onDelete(member.id)} className="del">
+        Delete
+      </button>
     </div>
   );
 }
 
-
-
-
-function Dev() {
+export default function App() {
   const [members, setMembers] = useState([]);
-
   const [name, setName] = useState("");
   const [skill, setSkill] = useState("");
 
-
-  const addMember = (e) => {
+  function addMember(e) {
     e.preventDefault();
     if (!name || !skill) return;
 
-    setMembers([
-      ...members,
-      {
-        id: Date.now().toString(),
-        name,
-        skill,
-      },
-    ]);
+    setMembers((prev) => [...prev, { id: Date.now().toString(), name, skill }]);
 
     setName("");
     setSkill("");
-  };
+  }
 
-
-  const deleteMember = (id) => {
+  function deleteMember(id) {
     setMembers((prev) => prev.filter((m) => m.id !== id));
-  };
+  }
 
   function handleDragEnd(event) {
     const { active, over } = event;
-    if (!over) return;
+    if (!over || active.id === over.id) return;
 
-    if (active.id !== over.id) {
-      setMembers((items) => {
-        const oldIndex = items.findIndex((i) => i.id === active.id);
-        const newIndex = items.findIndex((i) => i.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
+    setMembers((items) => {
+      const oldIndex = items.findIndex((i) => i.id === active.id);
+      const newIndex = items.findIndex((i) => i.id === over.id);
+      return arrayMove(items, oldIndex, newIndex);
+    });
   }
 
   return (
-    <div style={{ padding: "100px", fontFamily: "sans-serif" }}>
-      <h1>Dev Community</h1>
+    <div className="wrap">
+      <div className="box">
+        <h1>Dev Community</h1>
 
-      <form onSubmit={addMember}>
-        <input
-          placeholder="Enter name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+        <form onSubmit={addMember} className="form">
+          <input
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
 
-        <input
-          placeholder="Enter skill"
-          value={skill}
-          onChange={(e) => setSkill(e.target.value)}
-        />
+          <input
+            placeholder="Skill"
+            value={skill}
+            onChange={(e) => setSkill(e.target.value)}
+          />
 
-        <button type="submit">Add Dev</button>
-      </form>
+          <button>Add</button>
+        </form>
 
-      <h3>Total Devs: {members.length}</h3>
+        <div className="top">
+          <b>Members</b>
+          <span>{members.length}</span>
+        </div>
 
-     
-      <DndContext
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={members.map((m) => m.id)}
-          strategy={verticalListSortingStrategy}
+        <DndContext
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          {members.map((m) => (
-            <Row
-              key={m.id}
-              member={m}
-              onDelete={deleteMember}
-            />
-          ))}
-        </SortableContext>
-      </DndContext>
+          <SortableContext
+            items={members.map((m) => m.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {members.map((m) => (
+              <Row key={m.id} member={m} onDelete={deleteMember} />
+            ))}
+          </SortableContext>
+        </DndContext>
+      </div>
     </div>
   );
 }
-
-export default Dev;
